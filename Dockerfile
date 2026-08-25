@@ -42,6 +42,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
 
+# Production node_modules so scripts can import 'postgres', 'bcryptjs', etc.
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+
 # File uploads directory (mounted as a volume in production)
 RUN mkdir -p uploads && chown nextjs:nodejs uploads
 
