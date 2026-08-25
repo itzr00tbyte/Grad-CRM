@@ -1,0 +1,23 @@
+{
+  "name": "schoolgrads-portal",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "init-db": "node scripts/init-db.mjs",
+    "preflight": "node scripts/preflight.mjs",
+    "seed-demo": "node scripts/seed-demo.mjs",
+    "check": "node test/check.mjs"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "csv-parse": "^7.0.2",
+    "jose": "^5.9.6",
+    "next": "^15.1.6",
+    "postgres": "^3.4.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
