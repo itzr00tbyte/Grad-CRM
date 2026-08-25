@@ -91,10 +91,10 @@ cd Grad-CRM
 # Build image
 docker build -t schoolgrads-crm .
 
-# Run (uses the committed .env — swap for .env.production if you want a separate prod env)
+# Run
 docker run -d --name crm -p 3000:3000 --env-file .env --restart unless-stopped schoolgrads-crm
 
-# First run: apply schema + create admin
+# First run: apply schema + create admin login
 docker exec crm node scripts/init-db.mjs admin@schoolgrads.ai 'your-password'
 ```
 

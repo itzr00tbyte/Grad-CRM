@@ -38,6 +38,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Scripts needed for init-db, preflight etc. via docker exec
+COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
+COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
+
 # File uploads directory (mounted as a volume in production)
 RUN mkdir -p uploads && chown nextjs:nodejs uploads
 
