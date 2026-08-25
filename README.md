@@ -34,13 +34,15 @@ move to new hosting.
 | Route | What | Roles |
 |---|---|---|
 | `/` | Dashboard: pipeline, cash, follow-ups, receivables, delivery, renewals | all |
-| `/schools`, `/schools/[id]` | The master record: contacts, deals, invoices, delivery, documents, activity | admin, sales, ops, finance |
-| `/crm`, `/crm/[id]` | Needs-attention worklist, weighted forecast, pipeline board, deal detail | admin, sales |
+| `/schools`, `/schools/[id]` | Master record: contacts, deals, invoices, delivery, documents, activity, enquiry log | admin, sales, ops, finance |
+| `/crm`, `/crm/[id]` | Needs-attention worklist, weighted forecast, Kanban pipeline board | admin, sales |
 | `/catalog` | Programs with unit, price, SAC code, GST rate | admin, sales, finance |
-| `/quotes`, `/quotes/[id]` | Catalog-driven quotes → convert to invoice | admin, sales, finance |
+| `/quotes`, `/quotes/[id]` | Catalog-driven quotes per rep → convert to invoice | admin, sales, finance |
 | `/invoices`, `/invoices/[id]` | GST Rule 46 invoices, payments, print/PDF | admin, sales, finance |
 | `/finance` | Receivables aging, expenses, TDS by section | admin, finance |
 | `/delivery` | Training sessions and deliverables per school | admin, ops, sales |
+| `/reports` | Team performance dashboard, enquiry funnel, win/loss trends, call analytics | admin, sales, finance |
+| `/campaigns` | Outreach campaigns linked to deals | admin, sales |
 | `/people` | Employee register, logins, leave approvals, payslip run | admin, finance |
 | `/me` | Check in/out, apply for leave, own payslips | everyone |
 
@@ -78,6 +80,35 @@ than printed on an invoice the school then cannot claim credit on.
 
 Backups are the host's job — managed Postgres with point-in-time recovery is the least work.
 Self-hosting instead means a `pg_dump` on a schedule; there is nothing in the app for it.
+
+## Docker / VPS Deployment
+
+```bash
+# Clone on your VPS
+git clone https://github.com/itzr00tbyte/Grad-CRM.git
+cd Grad-CRM
+
+# Build image
+docker build -t schoolgrads-crm .
+
+# Run (uses the committed .env — swap for .env.production if you want a separate prod env)
+docker run -d --name crm -p 3000:3000 --env-file .env --restart unless-stopped schoolgrads-crm
+
+# First run: apply schema + create admin
+docker exec crm node scripts/init-db.mjs admin@schoolgrads.ai 'your-password'
+```
+
+Put nginx on port 443 in front (certbot for the cert). The `Strict-Transport-Security` header
+in `next.config.mjs` takes effect once HTTPS is live.
+
+To update after a `git push`:
+
+```bash
+git pull
+docker build -t schoolgrads-crm .
+docker stop crm && docker rm crm
+docker run -d --name crm -p 3000:3000 --env-file .env --restart unless-stopped schoolgrads-crm
+```
 
 ## Deliberately not built
 
