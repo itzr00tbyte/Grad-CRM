@@ -41,6 +41,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Scripts needed for init-db, preflight etc. via docker exec
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
+COPY --from=builder --chown=nextjs:nodejs /app/schema.sql ./schema.sql
 
 # Production node_modules so scripts can import 'postgres', 'bcryptjs', etc.
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
