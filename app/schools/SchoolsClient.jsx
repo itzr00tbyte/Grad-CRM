@@ -20,38 +20,6 @@ export default function SchoolsClient({ initialRows, err, initialSearch, user, s
 
   const isAdmin = user?.role === 'admin'
 
-  const toggleSelect = (id) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  const allCurrentPageSelected =
-    paginatedRows.length > 0 && paginatedRows.every((r) => selectedIds.has(r.id))
-
-  const toggleSelectAllPage = () => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (allCurrentPageSelected) {
-        paginatedRows.forEach((r) => next.delete(r.id))
-      } else {
-        paginatedRows.forEach((r) => next.add(r.id))
-      }
-      return next
-    })
-  }
-
-  const selectAllFiltered = () => {
-    setSelectedIds(new Set(filteredRows.map((r) => r.id)))
-  }
-
-  const clearSelection = () => {
-    setSelectedIds(new Set())
-  }
-
   // Extract unique cities & owners for dynamic dropdown filters
   const cities = useMemo(() => {
     const set = new Set(initialRows.map((r) => r.city).filter(Boolean))
@@ -104,6 +72,38 @@ export default function SchoolsClient({ initialRows, err, initialSearch, user, s
     const start = page * rowsPerPage
     return filteredRows.slice(start, start + rowsPerPage)
   }, [filteredRows, page, rowsPerPage])
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const allCurrentPageSelected =
+    paginatedRows.length > 0 && paginatedRows.every((r) => selectedIds.has(r.id))
+
+  const toggleSelectAllPage = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (allCurrentPageSelected) {
+        paginatedRows.forEach((r) => next.delete(r.id))
+      } else {
+        paginatedRows.forEach((r) => next.add(r.id))
+      }
+      return next
+    })
+  }
+
+  const selectAllFiltered = () => {
+    setSelectedIds(new Set(filteredRows.map((r) => r.id)))
+  }
+
+  const clearSelection = () => {
+    setSelectedIds(new Set())
+  }
 
   const hasActiveFilters = Boolean(searchTerm || statusFilter || boardFilter || segmentFilter || cityFilter || ownerFilter || mySchoolsOnly)
 
