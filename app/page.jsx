@@ -8,10 +8,12 @@ export default async function Dashboard({ searchParams }) {
   const user = await requireUser()
   const denied = (await searchParams)?.denied
 
-  const [pipeline, cash, aging, deliveries, renewals, tasks, leave] = await Promise.all([
+  const [pipeline, cash, aging, deliveries, renewals, tasks, userStats] = await Promise.all([
     can(user, 'crm')
       ? sql`select stage, count(*)::int as n, coalesce(sum(value),0) as value
-            from deals where stage not in ('won','lost') and deleted_at is null group by stage`
+            from deals where stage not in ('won','lost') and deleted_at is null
+            ${user.role !== 'admin' ? sql`and owner_id = ${user.id}` : sql``}
+            group by stage`
       : [],
     can(user, 'finance')
       ? sql`select
@@ -45,25 +47,25 @@ export default async function Dashboard({ searchParams }) {
           and a.deleted_at is null
           and (a.owner_id = ${user.id} or ${user.role} = 'admin')
         order by a.due_on limit 15`,
-    sql`select em.id, em.cl_total, em.el_total,
-           coalesce((select sum(days) from leave_requests l
-                     where l.employee_id = em.id and l.status='approved' and l.kind in ('CL','SL')
-                       and date_part('year', l.from_on) = date_part('year', current_date)),0) as cl_used,
-           coalesce((select sum(days) from leave_requests l
-                     where l.employee_id = em.id and l.status='approved' and l.kind='EL'
-                       and date_part('year', l.from_on) = date_part('year', current_date)),0) as el_used
-         from employees em where em.user_id = ${user.id}`,
+    sql`select
+          (select count(*)::int from entities where owner_id = ${user.id} and deleted_at is null) as my_schools,
+          (select count(*)::int from deals where owner_id = ${user.id} and stage not in ('won','lost') and deleted_at is null) as my_deals,
+          (select coalesce(sum(value), 0) from deals where owner_id = ${user.id} and stage not in ('won','lost') and deleted_at is null) as my_deal_val,
+          (select count(*)::int from deals where owner_id = ${user.id} and stage = 'won' and deleted_at is null) as my_won_count,
+          (select coalesce(sum(value), 0) from deals where owner_id = ${user.id} and stage = 'won' and deleted_at is null) as my_won_val
+        `,
   ])
 
   const c = cash[0]
-  const emp = leave[0]
+  const st = userStats[0] || {}
+  const isSalesOnly = user.role === 'sales'
 
   return (
     <>
       <div className="page-header">
         <div className="page-title-group">
-          <h1>Executive Dashboard</h1>
-          <p className="page-subtitle">Welcome back, {user.name}. Here is your CRM & operational overview.</p>
+          <h1>{isSalesOnly ? 'Sales Dashboard' : 'Executive Dashboard'}</h1>
+          <p className="page-subtitle">Welcome back, {user.name}. Here is your CRM &amp; operational overview.</p>
         </div>
       </div>
 
@@ -71,24 +73,49 @@ export default async function Dashboard({ searchParams }) {
 
       {/* KPI Section */}
       <div className="grid">
-        {c && (
+        {/* Sales Rep Specific KPIs */}
+        {isSalesOnly ? (
           <>
-            <KPICard label="Billed This Month" value={inr(c.billed_month)} subtext="Current billing cycle" />
-            <KPICard label="Received This Month" value={inr(c.received_month)} subtext="Collections settled" />
-            <KPICard label="Total Outstanding" value={inr(c.outstanding)} subtext="Uncollected receivables" />
+            <KPICard
+              label="My Assigned Schools"
+              value={st.my_schools || 0}
+              subtext="Lead accounts assigned to you"
+              action={<a href="/schools" className="muted" style={{ fontWeight: 600, fontSize: 12 }}>View Schools →</a>}
+            />
+            <KPICard
+              label="My Active Pipeline"
+              value={inr(st.my_deal_val || 0)}
+              subtext={`${st.my_deals || 0} open opportunity deal(s)`}
+              action={<a href="/crm?mine=1" className="muted" style={{ fontWeight: 600, fontSize: 12 }}>Open Deals →</a>}
+            />
+            <KPICard
+              label="Follow-ups Due (7d)"
+              value={tasks.length}
+              subtext={tasks.length === 0 ? 'All touchpoints up to date' : 'Scheduled calls / tasks'}
+              trend={tasks.length > 0 ? { type: 'down', value: 'Action Needed' } : { type: 'up', value: 'Clear' }}
+            />
+            <KPICard
+              label="My Closed-Won Deals"
+              value={st.my_won_count || 0}
+              subtext={`Won value: ${inr(st.my_won_val || 0)}`}
+            />
           </>
-        )}
-        {emp && (
-          <KPICard
-            label="My Leave Balance"
-            value={`${emp.cl_total - emp.cl_used} CL · ${emp.el_total - emp.el_used} EL`}
-            subtext="Available leave days"
-            action={
-              <a className="muted" href="/me" style={{ fontWeight: 600, fontSize: 12 }}>
-                Apply for leave →
-              </a>
-            }
-          />
+        ) : (
+          <>
+            {c && (
+              <>
+                <KPICard label="Billed This Month" value={inr(c.billed_month)} subtext="Current billing cycle" />
+                <KPICard label="Received This Month" value={inr(c.received_month)} subtext="Collections settled" />
+                <KPICard label="Total Outstanding" value={inr(c.outstanding)} subtext="Uncollected receivables" />
+              </>
+            )}
+            <KPICard
+              label="Follow-ups Due (7d)"
+              value={tasks.length}
+              subtext={tasks.length === 0 ? 'All touchpoints up to date' : 'Scheduled calls / tasks'}
+              trend={tasks.length > 0 ? { type: 'down', value: 'Action Needed' } : { type: 'up', value: 'Clear' }}
+            />
+          </>
         )}
       </div>
 
