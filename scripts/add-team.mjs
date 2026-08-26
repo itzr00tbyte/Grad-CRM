@@ -18,10 +18,16 @@ const defaultRole = process.argv[3] || 'sales'
 
 const team = [
   {
+    name: 'Maddireddy Nithin Reddy',
+    email: 'nithinreddy@schoolgrads.ai',
+    role: 'admin',
+    designation: 'Owner & Founder',
+  },
+  {
     name: 'Syed Gulam Murtuza',
     email: 'murtuza@schoolgrads.ai',
-    role: 'sales',
-    designation: 'Business Development / Sales Executive',
+    role: 'admin',
+    designation: 'Business & Operations Head',
   },
   {
     name: 'Donnipad Raghavendra Rao',
@@ -30,22 +36,16 @@ const team = [
     designation: 'Sales Representative',
   },
   {
-    name: 'Maddireddy Nithin Reddy',
-    email: 'nithinreddy@schoolgrads.ai',
-    role: 'sales',
-    designation: 'Sales Executive',
-  },
-  {
     name: 'Anushree Sharma',
     email: 'anushree@schoolgrads.ai',
     role: 'sales',
-    designation: 'Account Manager / Sales',
+    designation: 'Sales Representative',
   },
   {
     name: 'Somya Rawat',
     email: 'somyarawat@schoolgrads.ai',
     role: 'sales',
-    designation: 'Sales & Client Relations',
+    designation: 'Sales Representative',
   },
 ]
 
