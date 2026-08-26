@@ -6,3 +6,5 @@ node_modules
 .DS_Store
 uploads/
 *.csv
+!InboxTales_School_Contacts_MASTER.csv
+

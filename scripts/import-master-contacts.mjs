@@ -10,13 +10,16 @@ if (!process.env.DATABASE_URL) {
   process.exit(1)
 }
 
-const csvPath = '/Users/snehithchalasani/Stuff/SchoolGrads-CRM/InboxTales_School_Contacts_MASTER.csv'
+const csvPath = new URL('../InboxTales_School_Contacts_MASTER.csv', import.meta.url)
 if (!fs.existsSync(csvPath)) {
-  console.error('CSV file not found at:', csvPath)
-  process.exit(1)
+  const altPath = new URL('../InboxTales_School_Contacts_MASTER.csv.bak', import.meta.url)
+  if (!fs.existsSync(altPath)) {
+    console.error('CSV file not found at:', csvPath)
+    process.exit(1)
+  }
 }
 
-const fileContent = fs.readFileSync(csvPath, 'utf8')
+const fileContent = fs.readFileSync(fs.existsSync(csvPath) ? csvPath : new URL('../InboxTales_School_Contacts_MASTER.csv.bak', import.meta.url), 'utf8')
 const records = parse(fileContent, {
   columns: true,
   skip_empty_lines: true,

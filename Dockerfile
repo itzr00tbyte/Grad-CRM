@@ -42,6 +42,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
 COPY --from=builder --chown=nextjs:nodejs /app/schema.sql ./schema.sql
+COPY --from=builder --chown=nextjs:nodejs /app/InboxTales_School_Contacts_MASTER.csv* ./
 
 # Production node_modules so scripts can import 'postgres', 'bcryptjs', etc.
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
