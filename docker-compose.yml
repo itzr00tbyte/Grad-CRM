@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: schoolgrads
+      POSTGRES_PASSWORD: crmpassword123
+      POSTGRES_DB: schoolgrads
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U schoolgrads -d schoolgrads"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  crm:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "80:3000"
+    environment:
+      DATABASE_URL: postgres://schoolgrads:crmpassword123@db:5432/schoolgrads
+      SESSION_SECRET: 33c049c300fb8c7e32da9e870a68a5a13b6c0e580c1683c77f7a190247baf582
+      NODE_ENV: production
+      PORT: 3000
+      ORG_NAME: "School Grads"
+      ORG_ADDRESS: "Hyderabad"
+      ORG_GSTIN: "36AAAFF0123M1Z5"
+      ORG_PAN: "OENSP8873M"
+      ORG_STATE: "Telangana"
+      ORG_EMAIL: "test@schoolgrads.ai"
+      ORG_PHONE: "+919876543210"
+      ORG_BANK: "HDFC"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+
+volumes:
+  pgdata:
+  uploads:
