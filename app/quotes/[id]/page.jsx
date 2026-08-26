@@ -4,8 +4,9 @@ import { requireUser } from '../../../lib/auth'
 import { d } from '../../../lib/fmt'
 import { Card, Field, Tag } from '../../../components/ui'
 import { ItemsEditor } from '../../../components/items'
-import { addQuoteItem, deleteQuoteItem, updateQuote } from '../actions'
+import { addQuoteItem, deleteQuoteItem, updateQuote, duplicateQuote } from '../actions'
 import { invoiceFromQuote } from '../../invoices/actions'
+import { PrintButton } from '../../../components/print'
 
 export default async function QuotePage({ params }) {
   await requireUser('billing')
@@ -53,13 +54,22 @@ export default async function QuotePage({ params }) {
         </form>
       </Card>
 
-      <div className="row noprint">
+      <div className="row noprint" style={{ marginTop: 16, display: 'flex', gap: 8, alignItems: 'center' }}>
         <form action={invoiceFromQuote}>
           <input type="hidden" name="quote_id" value={q.id} />
           <button type="submit" disabled={items.length === 0}>
             Convert to GST invoice
           </button>
         </form>
+
+        <form action={duplicateQuote}>
+          <input type="hidden" name="id" value={q.id} />
+          <button className="ghost" type="submit">
+            Duplicate Quote
+          </button>
+        </form>
+
+        <PrintButton />
       </div>
     </>
   )

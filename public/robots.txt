@@ -1,0 +1,4 @@
+# SchoolGrads CRM - Internal System
+# Disallow all indexing
+User-agent: *
+Disallow: /

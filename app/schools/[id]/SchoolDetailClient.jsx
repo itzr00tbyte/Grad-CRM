@@ -338,7 +338,15 @@ export default function SchoolDetailClient({
                       <td>{c.email ? <a href={`mailto:${c.email}`}>{c.email}</a> : '—'}</td>
                       <td>{c.phone ? <a href={`tel:${c.phone}`}>{c.phone}</a> : '—'}</td>
                       <td className="right">
-                        <form action={deleteContact} style={{ display: 'inline' }}>
+                        <form
+                          action={deleteContact}
+                          style={{ display: 'inline' }}
+                          onSubmit={(evt) => {
+                            if (!confirm(`Are you sure you want to remove contact "${c.name}"?`)) {
+                              evt.preventDefault()
+                            }
+                          }}
+                        >
                           <input type="hidden" name="id" value={c.id} />
                           <input type="hidden" name="entity_id" value={e.id} />
                           <button className="danger" type="submit">Remove</button>

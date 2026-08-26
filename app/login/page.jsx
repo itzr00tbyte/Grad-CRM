@@ -22,8 +22,8 @@ export default function LoginPage() {
         {error && <p className="err">{error}</p>}
 
         <form action={action}>
-          <Field label="Email Address" name="email" type="email" wide required autoFocus placeholder="name@schoolgrads.ai" />
-          <Field label="Password" name="password" type="password" wide required placeholder="••••••••" />
+          <Field label="Email Address" name="email" type="email" wide required autoFocus autoComplete="email" placeholder="name@schoolgrads.ai" />
+          <Field label="Password" name="password" type="password" wide required autoComplete="current-password" placeholder="••••••••" />
           <div style={{ marginTop: 16 }}>
             <button type="submit" disabled={pending} style={{ width: '100%', padding: '10px', fontSize: 14 }}>
               {pending ? 'Authenticating…' : 'Sign in to Portal'}

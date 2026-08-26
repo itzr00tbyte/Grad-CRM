@@ -51,3 +51,30 @@ export async function updateQuote(formData) {
             where id = ${id}`
   revalidatePath(`/quotes/${id}`)
 }
+
+export async function duplicateQuote(formData) {
+  const user = await requireUser('billing')
+  const sourceId = Number(formData.get('id'))
+
+  const [src] = await sql`select * from quotes where id = ${sourceId}`
+  if (!src) return
+
+  const items = await sql`select * from quote_items where quote_id = ${sourceId} order by id`
+  const newNumber = await nextQuoteNumber()
+
+  const [newQuote] = await sql`
+    insert into quotes (entity_id, deal_id, number, notes, owner_id, status)
+    values (${src.entity_id}, ${src.deal_id}, ${newNumber}, ${src.notes}, ${user.id}, 'draft')
+    returning id
+  `
+
+  for (const item of items) {
+    await sql`
+      insert into quote_items (quote_id, program_id, description, qty, unit_price, gst_rate)
+      values (${newQuote.id}, ${item.program_id}, ${item.description}, ${item.qty}, ${item.unit_price}, ${item.gst_rate})
+    `
+  }
+
+  redirect(`/quotes/${newQuote.id}`)
+}
+

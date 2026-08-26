@@ -806,23 +806,85 @@ button.danger:hover, .btn.danger:hover {
   }
 }
 
-/* --- Print Styling --- */
+/* --- Print Styling for PDF & Invoices --- */
 @media print {
-  .app-sidebar, .app-topbar, .noprint, .drawer-backdrop {
+  @page {
+    margin: 15mm;
+    size: auto;
+  }
+
+  .app-sidebar,
+  .app-topbar,
+  .noprint,
+  .sidebar-toggle-btn,
+  .page-actions,
+  .drawer-backdrop,
+  button,
+  .btn:not(.print-include) {
     display: none !important;
   }
+
+  html, body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-size: 12pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .app-shell {
+    display: block !important;
+  }
+
   .app-main-wrapper {
-    margin-left: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
   }
-  body {
-    background: #ffffff;
+
+  main {
+    padding: 0 !important;
+    max-width: 100% !important;
   }
+
   .card {
-    border: 0;
-    padding: 0;
-    box-shadow: none;
+    border: 1px solid #e5e7eb !important;
+    padding: 16px !important;
+    margin-bottom: 16px !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    page-break-inside: avoid;
   }
-  h1, h2, .kpi-value {
-    color: #000000;
+
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th, td {
+    border-bottom: 1px solid #e5e7eb !important;
+    color: #111827 !important;
+    padding: 8px !important;
+  }
+
+  th {
+    background: #f9fafb !important;
+    font-weight: bold !important;
+  }
+
+  h1, h2, h3, .kpi-value {
+    color: #000000 !important;
+  }
+
+  a {
+    text-decoration: none !important;
+    color: inherit !important;
+  }
+
+  .tag {
+    border: 1px solid #d1d5db !important;
+    background: transparent !important;
+    color: #111827 !important;
   }
 }
+
