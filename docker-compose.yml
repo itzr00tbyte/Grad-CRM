@@ -21,7 +21,6 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
-      - "80:3000"
     environment:
       DATABASE_URL: postgres://schoolgrads:crmpassword123@db:5432/schoolgrads
       SESSION_SECRET: 33c049c300fb8c7e32da9e870a68a5a13b6c0e580c1683c77f7a190247baf582
