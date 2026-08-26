@@ -2,8 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { Card, Field, Tag, STATUSES, BOARDS } from '../../components/ui'
-import { SubmitButton } from '../../components/submit'
-import { createSchool } from './actions'
+import { createSchool, bulkDeleteSchools, bulkAssignSchools } from './actions'
 
 export default function SchoolsClient({ initialRows, err, initialSearch, user, salesUsers = [] }) {
   const [searchTerm, setSearchTerm] = useState(initialSearch || '')
@@ -15,9 +14,43 @@ export default function SchoolsClient({ initialRows, err, initialSearch, user, s
   const [mySchoolsOnly, setMySchoolsOnly] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
   const [page, setPage] = useState(0)
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [bulkOwnerId, setBulkOwnerId] = useState('')
   const rowsPerPage = 25
 
   const isAdmin = user?.role === 'admin'
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const allCurrentPageSelected =
+    paginatedRows.length > 0 && paginatedRows.every((r) => selectedIds.has(r.id))
+
+  const toggleSelectAllPage = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (allCurrentPageSelected) {
+        paginatedRows.forEach((r) => next.delete(r.id))
+      } else {
+        paginatedRows.forEach((r) => next.add(r.id))
+      }
+      return next
+    })
+  }
+
+  const selectAllFiltered = () => {
+    setSelectedIds(new Set(filteredRows.map((r) => r.id)))
+  }
+
+  const clearSelection = () => {
+    setSelectedIds(new Set())
+  }
 
   // Extract unique cities & owners for dynamic dropdown filters
   const cities = useMemo(() => {
@@ -243,12 +276,103 @@ export default function SchoolsClient({ initialRows, err, initialSearch, user, s
         </div>
       </div>
 
+      {/* Sticky Bulk Action Toolbar */}
+      {selectedIds.size > 0 && (
+        <div style={{
+          background: 'var(--navy)',
+          color: '#ffffff',
+          padding: '10px 16px',
+          borderRadius: 'var(--r)',
+          marginBottom: 12,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 12,
+          boxShadow: 'var(--shadow)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>
+              ✓ {selectedIds.size} school(s) selected
+            </span>
+            {selectedIds.size < filteredRows.length && (
+              <button
+                type="button"
+                className="btn ghost"
+                onClick={selectAllFiltered}
+                style={{ padding: '4px 10px', fontSize: 11, background: 'rgba(255,255,255,0.15)', color: '#fff', borderColor: 'transparent' }}
+              >
+                Select all {filteredRows.length} filtered
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn ghost"
+              onClick={clearSelection}
+              style={{ padding: '4px 10px', fontSize: 11, background: 'transparent', color: '#cbd5e1', borderColor: 'rgba(255,255,255,0.2)' }}
+            >
+              Clear
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {isAdmin && salesUsers.length > 0 && (
+              <form action={bulkAssignSchools} style={{ display: 'flex', gap: 6 }}>
+                <input type="hidden" name="ids" value={JSON.stringify(Array.from(selectedIds))} />
+                <select
+                  name="owner_id"
+                  value={bulkOwnerId}
+                  onChange={(e) => setBulkOwnerId(e.target.value)}
+                  style={{ padding: '5px 8px', fontSize: 12, width: 'auto', background: '#ffffff', color: '#111827' }}
+                  required
+                >
+                  <option value="">Reassign to Rep...</option>
+                  <option value="">Unassigned (Clear owner)</option>
+                  {salesUsers.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+                <button type="submit" className="btn" style={{ padding: '5px 12px', fontSize: 12, background: 'var(--blue)' }}>
+                  Assign
+                </button>
+              </form>
+            )}
+
+            <form
+              action={bulkDeleteSchools}
+              onSubmit={(evt) => {
+                if (!confirm(`Are you sure you want to remove ${selectedIds.size} selected school(s)? This will soft-delete the records.`)) {
+                  evt.preventDefault()
+                }
+              }}
+            >
+              <input type="hidden" name="ids" value={JSON.stringify(Array.from(selectedIds))} />
+              <button
+                type="submit"
+                className="btn danger"
+                style={{ padding: '5px 12px', fontSize: 12, background: 'var(--bad-fg)', borderColor: 'var(--bad-fg)' }}
+              >
+                🗑️ Delete Selected ({selectedIds.size})
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Live Filtered Data Grid */}
       <Card>
         <div className="scroll">
           <table>
             <thead>
               <tr>
+                <th style={{ width: 36, textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={allCurrentPageSelected}
+                    onChange={toggleSelectAllPage}
+                    title="Select all on this page"
+                  />
+                </th>
                 <th>School Reference</th>
                 <th>Contact Person (POC)</th>
                 <th>Board</th>
@@ -262,7 +386,7 @@ export default function SchoolsClient({ initialRows, err, initialSearch, user, s
             <tbody>
               {paginatedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="muted" style={{ textAlign: 'center', padding: '32px' }}>
+                  <td colSpan={9} className="muted" style={{ textAlign: 'center', padding: '32px' }}>
                     No matching schools found.
                     {hasActiveFilters && (
                       <button type="button" className="btn ghost" onClick={clearAllFilters} style={{ marginLeft: 12 }}>
@@ -273,7 +397,14 @@ export default function SchoolsClient({ initialRows, err, initialSearch, user, s
                 </tr>
               ) : (
                 paginatedRows.map((e) => (
-                  <tr key={e.id}>
+                  <tr key={e.id} style={{ background: selectedIds.has(e.id) ? 'var(--blue-light, #f0f7ff)' : undefined }}>
+                    <td style={{ textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(e.id)}
+                        onChange={() => toggleSelect(e.id)}
+                      />
+                    </td>
                     <td>
                       <a href={`/schools/${e.id}`} style={{ fontWeight: 700, color: 'var(--navy)' }}>
                         {e.name}

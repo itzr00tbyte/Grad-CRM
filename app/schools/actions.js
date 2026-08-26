@@ -159,3 +159,39 @@ export async function logEnquiry(formData) {
             ${f(formData, 'outcome')}, ${contactId})`
   revalidatePath(`/schools/${entityId}`)
 }
+
+/** Bulk Delete selected schools (Soft delete) */
+export async function bulkDeleteSchools(formData) {
+  const user = await requireUser('schools')
+  const rawIds = formData.get('ids')
+  if (!rawIds) return
+
+  const ids = JSON.parse(rawIds).map(Number).filter(Boolean)
+  if (ids.length === 0) return
+
+  // Admin can delete any; sales can delete schools they own
+  if (user.role === 'admin') {
+    await sql`update entities set deleted_at = now() where id in ${sql(ids)}`
+  } else {
+    await sql`update entities set deleted_at = now() where id in ${sql(ids)} and owner_id = ${user.id}`
+  }
+
+  revalidatePath('/schools')
+}
+
+/** Bulk Reassign selected schools to another rep (Admin only) */
+export async function bulkAssignSchools(formData) {
+  const user = await requireUser('schools')
+  if (user.role !== 'admin') redirect('/schools?err=' + encodeURIComponent('Only admins can reassign school accounts.'))
+
+  const rawIds = formData.get('ids')
+  const ownerId = formData.get('owner_id') ? Number(formData.get('owner_id')) : null
+  if (!rawIds) return
+
+  const ids = JSON.parse(rawIds).map(Number).filter(Boolean)
+  if (ids.length === 0) return
+
+  await sql`update entities set owner_id = ${ownerId} where id in ${sql(ids)}`
+  revalidatePath('/schools')
+}
+
