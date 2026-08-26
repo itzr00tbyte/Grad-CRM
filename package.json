@@ -8,6 +8,8 @@
     "start": "next start",
     "init-db": "node scripts/init-db.mjs",
     "add-team": "node scripts/add-team.mjs",
+    "clean-csv": "node scripts/clean-csv.mjs",
+    "import-master": "node scripts/import-master-contacts.mjs",
     "clear-data": "node scripts/clear-demo-data.mjs",
     "preflight": "node scripts/preflight.mjs",
     "seed-demo": "node scripts/seed-demo.mjs",
